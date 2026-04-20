@@ -18,6 +18,7 @@ data/
 
 # Evaluation outputs (generated at runtime)
 outputs/glas_eval/
+outputs/data_samples_eval/
 
 # IDE / editor
 .vscode/
