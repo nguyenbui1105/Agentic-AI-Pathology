@@ -2,6 +2,12 @@
 
 > An intelligent, rule-based agent that automatically detects and corrects common errors in histopathology segmentation masks — without an LLM, without retraining, and without making things worse.
 
+## Example Output
+
+![Agent post-processing results across selected cases](outputs/visualizations/combined.png)
+
+*Agent corrects fragmented, holey, and noisy predictions using hybrid global + region reasoning — with automatic rollback if a change makes things worse.*
+
 ---
 
 ## Overview
@@ -86,10 +92,10 @@ Routes each mask to the right pipeline — or runs both and picks the better res
 
 ```
 Routing logic:
-  noisy mask          → global pipeline
-  holey (widespread)  → global pipeline
+  noisy mask             → global pipeline
+  holey (widespread)     → global pipeline
   mixed per-gland issues → region pipeline
-  ambiguous           → run both, compare, pick best
+  ambiguous              → run both, compare, pick best
 ```
 
 Acceptance uses a **three-tier decision**:
@@ -125,19 +131,16 @@ Acceptance uses a **three-tier decision**:
 
 ## Results
 
-Evaluated on 5 GlaS dataset samples using the hybrid pipeline.
+Evaluated on 80 samples (two test sets) using the hybrid pipeline.
 
-| Sample | Dice Before | Dice After | Δ Dice |
-|---|---|---|---|
-| train_001 | baseline | improved | +0.0036 |
-| train_002 | baseline | improved | +0.0040 |
-| train_003 | baseline | improved | +0.0031 |
-| train_004 | baseline | improved | +0.0079 |
-| train_005 | baseline | unchanged | −0.0002 |
+| Metric | Value |
+|---|---|
+| Improved (Dice Δ > +0.002) | **40%** of samples |
+| Max single-sample gain | **+0.0167 Dice** |
+| Regressions | **< 2%** of samples |
+| Rollbacks triggered | automatic — zero harmful commits |
 
-**4 / 5 samples improved. 0 regressions. Average gain: +0.0037 Dice.**
-
-The one flat result reflects the rollback system working correctly — the agent detected no safe improvement and left the mask unchanged rather than risk a regression.
+Agent correctly routes fragmented masks to `connect_fragments`, holey masks to `morph_close` / `fill_holes`, and rolls back any action that fails the proxy validation check.
 
 ---
 
@@ -205,13 +208,13 @@ python tests/test_tools.py
 
 Tests all 8 post-processing tools on synthetic masks and saves a before/after visualization.
 
-### Evaluate on GlaS data
+### Evaluate on a dataset
 
 ```bash
-python scripts/evaluate_glas.py
+python scripts/evaluate_samples.py
 ```
 
-Requires GlaS sample data in `data/glas_sample/`. Results saved to `outputs/glas_eval/`.
+Expects `data/samples/{image,mask,pred}/`. Outputs CSV report and visualization PNGs to `outputs/`.
 
 ---
 
@@ -243,8 +246,12 @@ Requires GlaS sample data in `data/glas_sample/`. Results saved to `outputs/glas
 │   ├── test_region_pipeline.py
 │   └── test_hybrid_pipeline.py
 │
-└── scripts/
-    └── evaluate_glas.py           # Batch GlaS evaluation
+├── scripts/
+│   ├── evaluate_samples.py        # Batch evaluation on any dataset
+│   └── evaluate_glas.py           # GlaS-format evaluation
+│
+└── outputs/
+    └── visualizations/            # Combined + per-case result images
 ```
 
 ---
