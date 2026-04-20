@@ -16,7 +16,8 @@ Improving imperfect model predictions — without retraining, without an LLM, an
 ## Key Insight
 
 > Segmentation models make predictable, correctable mistakes.  
-> Instead of retraining the model, we reason about its output and fix it — systematically.
+> Instead of retraining the model, we reason about its output and fix it — systematically.  
+> This transforms segmentation from a prediction task into a decision-making problem.
 
 ---
 
